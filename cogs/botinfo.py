@@ -198,9 +198,13 @@ class BotInfo(commands.Cog):
                 icon_url=avatar_url
             )
 
-            await interaction.followup.send(embed=main_embed)
+            await interaction.edit_original_response(embed=main_embed)
         except Exception as e:
             await func.report_error(e, "getting bot info")
+            try:
+                await interaction.edit_original_response(content="❌ Error getting bot info.")
+            except Exception:
+                pass
 
 async def setup(bot):
     """Set up the BotInfo cog."""
