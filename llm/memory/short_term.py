@@ -1,6 +1,7 @@
 from typing import List, Any
 import re
 
+import collections
 import discord
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from function import func
@@ -14,17 +15,20 @@ class ShortTermMemoryProvider:
     each Discord message to a LangChain HumanMessage or AIMessage.
     """
 
-    def __init__(self, bot: Any, limit: int = 10):
+    def __init__(self, bot: Any, limit: int = 10, max_cache_size: int = 100):
         """
         Initialize the provider.
 
         Args:
             limit: maximum number of recent messages to fetch from channel.
+            max_cache_size: maximum number of attachments to cache.
         """
         if not isinstance(limit, int) or limit <= 0:
             raise ValueError("limit must be a positive integer")
         self.limit = limit
         self.bot = bot
+        self.max_cache_size = max_cache_size
+        self._attachment_cache = collections.OrderedDict()
 
     async def get(self, message: discord.Message) -> List[BaseMessage]:
         """
@@ -45,20 +49,37 @@ class ShortTermMemoryProvider:
             # Pre-fetch all attachments concurrently
             attachment_tasks = []
             task_mapping = []  # To map task index back to msg.id
+            attachment_results_by_msg = {}
+
             if _att_cfg.enabled:
                 for msg in history:
                     if msg.attachments:
                         for att in msg.attachments:
-                            attachment_tasks.append(process_attachment(att))
-                            task_mapping.append(msg.id)
+                            if att.id in self._attachment_cache:
+                                # Cache hit: update LRU order and use cached result
+                                cached_res = self._attachment_cache.pop(att.id)
+                                self._attachment_cache[att.id] = cached_res
+                                attachment_results_by_msg.setdefault(msg.id, []).extend(cached_res)
+                            else:
+                                # Cache miss: prepare to process
+                                attachment_tasks.append((att.id, process_attachment(att)))
+                                task_mapping.append(msg.id)
 
-            attachment_results_by_msg = {}
             if attachment_tasks:
                 import asyncio
-                results = await asyncio.gather(*attachment_tasks, return_exceptions=True)
-                for msg_id, res in zip(task_mapping, results):
+                # Extract just the coroutines for gather
+                coros = [task[1] for task in attachment_tasks]
+                results = await asyncio.gather(*coros, return_exceptions=True)
+
+                for task_info, msg_id, res in zip(attachment_tasks, task_mapping, results):
+                    att_id = task_info[0]
                     if not isinstance(res, Exception) and isinstance(res, list):
                         attachment_results_by_msg.setdefault(msg_id, []).extend(res)
+                        # Cache the result
+                        self._attachment_cache[att_id] = res
+                        # Bounded cache
+                        if len(self._attachment_cache) > self.max_cache_size:
+                            self._attachment_cache.popitem(last=False)
                     else:
                         # Fallback or log error could go here if process_attachment didn't handle it
                         pass
