@@ -171,6 +171,20 @@ class MathCalculatorCog(commands.Cog):
                 ) if self.lang_manager else "Error: Expression too long."
                 return error_message
 
+            # Check for dangerous patterns to prevent RCE via object hierarchy traversal
+            # We must check the original expression before extraction filters it.
+            dangerous_patterns = [
+                r'__', r'globals', r'locals', r'exec', r'import', r'eval',
+                r'getattr', r'setattr', r'delattr', r'system', r'subprocess', r'popen'
+            ]
+
+            for pattern in dangerous_patterns:
+                if re.search(pattern, expression, re.IGNORECASE):
+                    error_message = self.lang_manager.translate(
+                        guild_id, "commands", "math", "responses", "error_unsupported_elements"
+                    ) if self.lang_manager else "Error: Expression contains unsupported or dangerous elements."
+                    return error_message
+
             # Use extracted expression
             expression = extracted
 
