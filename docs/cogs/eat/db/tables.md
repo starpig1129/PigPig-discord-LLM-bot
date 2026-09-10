@@ -1,15 +1,15 @@
 # File: `cogs/eat/db/tables.py`
 
 ## Overview
-Core logic and functionalities for tables.py. This file is part of the cogs subsystem and handles the primary operations for its respective domain.
+Core module for tables.py.
 
 ## Classes
 
 ### `UserPref`
-Represents UserPref.
+Class representing UserPref.
 
 ### `SearchRecord`
-Represents SearchRecord.
+Class representing SearchRecord.
 
 - **Attributes**:
   - `discord_id` (`Any`): Instance attribute.
@@ -22,14 +22,14 @@ Represents SearchRecord.
   - `date` (`Any`): Instance attribute.
 
 - **Methods**:
-  - `__init__(discord_id: str, title: str, keyword: str, tag: str, address: str, map_rate: str, self_rate: float) -> Any`: Executes __init__ operation.
+  - `__init__(self, discord_id: str, title: str, keyword: str, tag: str, address: str, map_rate: str, self_rate: float) -> Any`: Method __init__.
 
 ### `Keywords`
-Represents Keywords.
+Class representing Keywords.
 
 - **Attributes**:
   - `keyword` (`Any`): Instance attribute.
   - `add_date` (`Any`): Instance attribute.
 
 - **Methods**:
-  - `__init__(keyword: String) -> Any`: Executes __init__ operation.
+  - `__init__(self, keyword: String) -> Any`: Method __init__.

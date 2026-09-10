@@ -1,34 +1,44 @@
-# Story System - Database
+# File: `cogs/story/database.py`
 
-**File:** [`cogs/story/database.py`](cogs/story/database.py)
+## Overview
+Core module for database.py.
 
-This module handles all data persistence for the story system. It is uniquely designed with two separate database classes to manage global and server-specific data.
+## Classes
 
-## `CharacterDB` Class (Global)
+### `CharacterDB`
+Handles all database operations for characters, independent of story worlds.
 
-This class manages a single, global database file: `data/story/characters.db`. This database stores all characters created across all servers the bot is in.
+- **Attributes**:
+  - `db_path` (`Any`): Instance attribute.
+  - `_initialized` (`Any`): Instance attribute.
+  - `_lock` (`Any`): Instance attribute.
+  - `logger` (`Any`): Instance attribute.
 
-*   **Purpose:** To create a shared repository of characters. A character created on one server can potentially be used in another, depending on its `is_public` flag.
-*   **Key Methods:**
-    *   `save_character(...)`: Saves or updates a `StoryCharacter` object.
-    *   `get_character(...)`: Retrieves a single character by its unique ID.
-    *   `get_characters_by_guild(...)`: Retrieves all characters associated with a specific server.
-    *   `get_selectable_characters(...)`: Retrieves all characters a specific user is allowed to use in a story. This includes all public characters in the server plus any private characters created by that user.
-    *   `delete_character(...)`: Deletes a character from the database.
+- **Methods**:
+  - `__init__(self) -> Any`: Method __init__.
+  - `_get_connection(self) -> sqlite3.Connection`: Establishes and returns a database connection.
+  - `initialize(self) -> Any`: Initializes the character database, creates the table, and handles migrations.
+  - `save_character(self, character: StoryCharacter) -> Any`: Saves or updates a character.
+  - `_row_to_character(self, row: sqlite3.Row) -> StoryCharacter`: Converts a database row to a StoryCharacter object.
+  - `get_characters_by_ids(self, character_ids: List[str]) -> List[StoryCharacter]`: Retrieves multiple characters by their IDs.
+  - `delete_character(self, character_id: str) -> Any`: Deletes a character by ID.
 
-## `StoryDB` Class (Per-Guild)
+### `StoryDB`
+Handles all database operations for the story module (worlds and instances).
 
-This class manages a separate database file for each server (guild), located at `data/story/{guild_id}_story.db`.
+- **Attributes**:
+  - `db_path` (`Any`): Instance attribute.
+  - `guild_id` (`Any`): Instance attribute.
+  - `_initialized` (`Any`): Instance attribute.
+  - `_lock` (`Any`): Instance attribute.
+  - `logger` (`Any`): Instance attribute.
 
-*   **Purpose:** To keep all story-related data completely isolated between servers. One server's worlds, ongoing stories, and character relationships cannot be accessed by another.
-*   **Key Methods:**
-    *   **World Management:**
-        *   `save_world(...)`: Saves or updates a `StoryWorld` object, serializing its complex nested data (locations, events) into JSON format for storage.
-        *   `get_world(...)`: Retrieves and deserializes a `StoryWorld` object from the database.
-        *   `get_all_worlds()`: Gets a list of all worlds created on that server.
-    *   **Instance Management:**
-        *   `save_story_instance(...)`: Saves or updates a `StoryInstance`, which represents an active story in a specific channel. This includes the current state, active characters, summaries, and outlines.
-        *   `get_story_instance(...)`: Retrieves the active story for a specific channel.
-    *   **Relationship Management:**
-        *   `save_player_relationship(...)`: Saves or updates the description of the relationship between a player (user) and an NPC (character).
-        *   `get_relationships_for_story(...)`: Retrieves all relationship data for an ongoing story.
+- **Methods**:
+  - `__init__(self, guild_id: int) -> Any`: Method __init__.
+  - `_get_connection(self) -> sqlite3.Connection`: Establishes and returns a database connection.
+  - `initialize(self) -> Any`: Initializes the database and creates tables if they don't exist.
+  - `save_world(self, world: StoryWorld) -> Any`: Saves or updates a story world using a SELECT then INSERT/UPDATE strategy.
+  - `get_world(self, world_name: str) -> Optional[StoryWorld]`: Retrieves a story world by name.
+  - `get_all_worlds(self) -> List[StoryWorld]`: Retrieves all story worlds for this guild.
+  - `save_story_instance(self, instance: StoryInstance) -> Any`: Saves or updates a story instance.
+  - `save_player_relationship(self, relationship: PlayerRelationship) -> Any`: Saves or updates a player-NPC relationship.

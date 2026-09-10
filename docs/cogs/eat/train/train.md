@@ -1,12 +1,12 @@
 # File: `cogs/eat/train/train.py`
 
 ## Overview
-Core logic and functionalities for train.py. This file is part of the cogs subsystem and handles the primary operations for its respective domain.
+Core module for train.py.
 
 ## Classes
 
 ### `Train`
-Represents Train.
+Class representing Train.
 
 - **Attributes**:
   - `db` (`Any`): Instance attribute.
@@ -20,6 +20,6 @@ Represents Train.
   - `logger` (`Any`): Instance attribute.
 
 - **Methods**:
-  - `__init__(db: DB, embedding_dim: Any, hidden_dim: Any, dropout: Any, learn_rate: Any, epochs: Any, save_interval: Any, log_interval: Any) -> None`: Executes __init__ operation.
-  - `genModel(discord_id: str) -> Any`: Executes genModel operation.
-  - `predict(discord_id: str) -> Any`: Executes predict operation.
+  - `__init__(self, db: DB, embedding_dim: Any, hidden_dim: Any, dropout: Any, learn_rate: Any, epochs: Any, save_interval: Any, log_interval: Any) -> None`: Method __init__.
+  - `genModel(self, discord_id: str) -> Any`: Method genModel.
+  - `predict(self, discord_id: str) -> Any`: Method predict.

@@ -1,7 +1,7 @@
 # File: `cogs/story/models.py`
 
 ## Overview
-Core logic and functionalities for models.py. This file is part of the cogs subsystem and handles the primary operations for its respective domain.
+Core module for models.py.
 
 ## Classes
 
@@ -20,7 +20,7 @@ Represents a specific location within the story world.
 - **Attributes**:
   - `name` (`str`): Class attribute.
   - `events` (`List[Event]`): Class attribute.
-  - `attributes` (`Dict[Tuple[str, Any]]`): Class attribute.
+  - `attributes` (`Dict[str, Any]`): Class attribute.
 
 ### `StoryWorld`
 Represents the lore and rules of a story world, acting as a container for locations.
@@ -29,7 +29,7 @@ Represents the lore and rules of a story world, acting as a container for locati
   - `guild_id` (`int`): Class attribute.
   - `world_name` (`str`): Class attribute.
   - `locations` (`List[Location]`): Class attribute.
-  - `attributes` (`Dict[Tuple[str, Any]]`): Class attribute.
+  - `attributes` (`Dict[str, Any]`): Class attribute.
 
 ### `StoryCharacter`
 Represents a character, either player-controlled (PC) or non-player (NPC).
@@ -43,7 +43,7 @@ Represents a character, either player-controlled (PC) or non-player (NPC).
   - `user_id` (`Optional[int]`): Class attribute.
   - `is_public` (`bool`): Class attribute.
   - `webhook_url` (`Optional[str]`): Class attribute.
-  - `attributes` (`Dict[Tuple[str, Any]]`): Class attribute.
+  - `attributes` (`Dict[str, Any]`): Class attribute.
   - `inventory` (`List[str]`): Class attribute.
   - `status` (`str`): Class attribute.
   - `character_id` (`str`): Class attribute.
@@ -60,7 +60,7 @@ Represents an active story session in a specific channel.
   - `current_location` (`str`): Class attribute.
   - `is_active` (`bool`): Class attribute.
   - `active_character_ids` (`List[str]`): Class attribute.
-  - `current_state` (`Dict[Tuple[str, Any]]`): Class attribute.
+  - `current_state` (`Dict[str, Any]`): Class attribute.
   - `event_log` (`List[str]`): Class attribute.
   - `message_counter` (`int`): Class attribute.
   - `summaries` (`List[str]`): Class attribute.
@@ -78,7 +78,7 @@ Represents the relationship between a player (user) and an NPC.
   - `relationship_id` (`str`): Class attribute.
 
 ### `DialogueContext`
-Represents DialogueContext.
+Class representing DialogueContext.
 
 - **Attributes**:
   - `speaker_name` (`str`): Class attribute.
@@ -86,7 +86,7 @@ Represents DialogueContext.
   - `emotional_state` (`str`): Class attribute.
 
 ### `StateUpdate`
-Represents StateUpdate.
+Class representing StateUpdate.
 
 - **Attributes**:
   - `location` (`str`): Class attribute.
@@ -94,7 +94,7 @@ Represents StateUpdate.
   - `time` (`str`): Class attribute.
 
 ### `RelationshipUpdate`
-Represents RelationshipUpdate.
+Class representing RelationshipUpdate.
 
 - **Attributes**:
   - `character_name` (`str`): Class attribute.
@@ -103,6 +103,7 @@ Represents RelationshipUpdate.
 
 ### `GMActionPlan`
 The Game Master's action plan, defining the next step in the story.
+This structure is used for the AI's structured output.
 
 - **Attributes**:
   - `action_type` (`str`): Class attribute.
@@ -115,6 +116,7 @@ The Game Master's action plan, defining the next step in the story.
 
 ### `CharacterAction`
 Represents a character's action, combining dialogue, physical action, and internal thought.
+This structure is used for the AI's structured output.
 
 - **Attributes**:
   - `action` (`Optional[str]`): Class attribute.
@@ -138,4 +140,4 @@ Structured output for a story outline
 - **Attributes**:
   - `outline` (`str`): Class attribute.
   - `major_plot_points` (`List[str]`): Class attribute.
-  - `character_arcs` (`Dict[Tuple[str, str]]`): Class attribute.
+  - `character_arcs` (`Dict[str, str]`): Class attribute.
