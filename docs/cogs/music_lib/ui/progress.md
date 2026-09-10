@@ -1,7 +1,7 @@
 # File: `cogs/music_lib/ui/progress.py`
 
 ## Overview
-Core logic and functionalities for progress.py. This file is part of the cogs subsystem and handles the primary operations for its respective domain.
+Core module for progress.py.
 
 ## Classes
 

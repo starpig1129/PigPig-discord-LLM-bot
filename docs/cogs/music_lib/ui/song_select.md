@@ -1,12 +1,12 @@
 # File: `cogs/music_lib/ui/song_select.py`
 
 ## Overview
-Core logic and functionalities for song_select.py. This file is part of the cogs subsystem and handles the primary operations for its respective domain.
+Core module for song_select.py.
 
 ## Classes
 
 ### `SongSelectView`
-Represents SongSelectView.
+Class representing SongSelectView.
 
 - **Attributes**:
   - `player` (`Any`): Instance attribute.
@@ -15,19 +15,19 @@ Represents SongSelectView.
   - `lang_manager` (`Optional[LanguageManager]`): Instance attribute.
 
 - **Methods**:
-  - `__init__(player: Any, results: Any, interaction: Any) -> Any`: Executes __init__ operation.
-  - `_get_lang_manager() -> Any`: Get language manager instance
-  - `_translate_music(*path, **kwargs) -> str`: 音樂模組專用翻譯方法
-  - `_get_fallback_text(key: str, **kwargs) -> str`: 備用文字機制
-  - `on_timeout() -> Any`: Handle view timeout
+  - `__init__(self, player: Any, results: Any, interaction: Any) -> Any`: Method __init__.
+  - `_get_lang_manager(self) -> Any`: Get language manager instance
+  - `_translate_music(self, *path: Any, **kwargs: Any) -> str`: 音樂模組專用翻譯方法
+  - `_get_fallback_text(self, key: str, **kwargs: Any) -> str`: 備用文字機制
+  - `on_timeout(self) -> Any`: Handle view timeout
 
 ### `SongSelectMenu`
-Represents SongSelectMenu.
+Class representing SongSelectMenu.
 
 - **Attributes**:
   - `view_parent` (`Any`): Instance attribute.
   - `results` (`Any`): Instance attribute.
 
 - **Methods**:
-  - `__init__(results: Any, view: Any) -> Any`: Executes __init__ operation.
-  - `callback(interaction: discord.Interaction) -> Any`: Handle song selection
+  - `__init__(self, results: Any, view: Any) -> Any`: Method __init__.
+  - `callback(self, interaction: discord.Interaction) -> Any`: Handle song selection

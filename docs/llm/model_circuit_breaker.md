@@ -1,50 +1,67 @@
-# Model Circuit Breaker
+# File: `llm/model_circuit_breaker.py`
 
 ## Overview
+ModelCircuitBreaker: Tracks model failures and temporarily skips known-failing models.
 
-The `ModelCircuitBreaker` module implements a fault-tolerance pattern to manage LLM provider failures. It tracks model performance in real-time and temporarily "trips" (disables) models that are consistently failing, preventing the bot from wasting API quota and reducing latency caused by doomed retry attempts.
+This module implements a circuit breaker pattern to prevent repeated API calls
+to models that are known to fail (due to quota exhaustion, non-existent models,
+rate limits, etc.). Failed models are temporarily marked as 'open' (unavailable)
+and will be skipped until a cooldown period expires.
 
-## Core Concepts
+Typical usage:
+    from llm.model_circuit_breaker import get_model_circuit_breaker
 
-### Error Categorization
+    cb = get_model_circuit_breaker()
 
-The circuit breaker classifies exceptions into different categories, each with a specific cooldown strategy:
+    # Check before calling
+    if cb.is_available(model_name):
+        try:
+            result = await call_model(model_name)
+        except Exception as e:
+            cb.record_failure(model_name, e)
 
-| Category | Typical Cause | Cooldown Period |
-|----------|---------------|-----------------|
-| `QUOTA_EXHAUSTED` | 429 Errors / Resource Exhausted | 12 Hours |
-| `MODEL_NOT_FOUND` | Incorrect model names / Deprecated models | 1 Hour |
-| `RATE_LIMITED` | Transient high-frequency usage | 30 Seconds |
-| `AUTHENTICATION` | Invalid API Keys / Permissions | 2 Hours |
-| `TRANSIENT` | Network timeouts / Connection issues | 10 Seconds |
-| `UNKNOWN` | Unexpected server-side errors | 1 Minute |
+## Classes
 
-## How it Works
+### `ErrorCategory`
+Categorizes errors for different cooldown strategies.
 
-1. **Pre-Check**: Before calling an LLM, the `ModelManager` queries `is_available(model_name)`.
-2. **Failure Recording**: If a model call fails, `record_failure(model_name, error)` is called.
-3. **Cooldown**: The model is marked as "open" (unavailable). Consecutive failures lead to exponential backoff (up to 4x the base cooldown).
-4. **Reset**: After the cooldown period expires, the circuit resets, allowing the model to be tried again.
+### `FailureRecord`
+Record of a model failure.
 
-## Benefits
+- **Attributes**:
+  - `model_name` (`str`): Class attribute.
+  - `category` (`ErrorCategory`): Class attribute.
+  - `failure_time` (`float`): Class attribute.
+  - `cooldown_until` (`float`): Class attribute.
+  - `error_message` (`str`): Class attribute.
+  - `consecutive_failures` (`int`): Class attribute.
 
-- **Quota Preservation**: Stops calling models that have already reported quota exhaustion.
-- **Improved UX**: Automatically skips "dead" models and proceeds to fallbacks instantly, rather than waiting for multiple timeouts.
-- **Self-Healing**: Models are automatically reintroduced once their recovery period (or rate-limit window) is likely to have passed.
+### `ModelCircuitBreaker`
+Thread-safe circuit breaker for LLM model calls.
 
-## Usage Example
+Tracks model failures and temporarily disables calls to models that are
+known to be failing. This prevents wasting API quota and reduces latency
+by avoiding doomed retry attempts.
 
-```python
-from llm.model_circuit_breaker import get_model_circuit_breaker
+Attributes:
+    _failures: Dict mapping model names to their failure records.
+    _lock: Threading lock for thread-safe operations.
 
-cb = get_model_circuit_breaker()
+- **Attributes**:
+  - `_failures` (`Dict[str, FailureRecord]`): Instance attribute.
+  - `_lock` (`Any`): Instance attribute.
 
-if cb.is_available("gemini-1.5-pro"):
-    try:
-        response = await model.invoke(prompt)
-    except Exception as e:
-        cb.record_failure("gemini-1.5-pro", e)
-```
+- **Methods**:
+  - `__init__(self) -> None`: Initialize the circuit breaker with empty failure tracking.
+  - `categorize_error(self, error: Exception) -> ErrorCategory`: Classify an exception into an error category.
+  - `is_available(self, model_name: str) -> bool`: Check if a model is currently available (not in cooldown).
+  - `record_failure(self, model_name: str, error: Exception, category: Optional[ErrorCategory]) -> ErrorCategory`: Record a model failure and start the cooldown period.
+  - `reset(self, model_name: Optional[str]) -> None`: Reset circuit breaker state.
 
----
-*The circuit breaker is a singleton instance (`get_model_circuit_breaker()`) ensuring consistent failure tracking across the entire bot process.*
+## Functions
+
+### `get_model_circuit_breaker() -> ModelCircuitBreaker`
+Get the global ModelCircuitBreaker singleton instance.
+
+Returns:
+    The singleton ModelCircuitBreaker instance.

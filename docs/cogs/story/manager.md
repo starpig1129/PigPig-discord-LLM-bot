@@ -1,42 +1,40 @@
-# Story System - Story Manager
+# File: `cogs/story/manager.py`
 
-**File:** [`cogs/story/manager.py`](cogs/story/manager.py)
+## Overview
+Core module for manager.py.
 
-The `StoryManager` is the central orchestrator of the story system. It implements the layered AI agent architecture and coordinates all other components to drive the narrative forward.
+## Classes
 
-## `StoryManager` Class
+### `StoryManager`
+The core manager for story logic. It coordinates the database, state,
+and prompt engine to generate story progression based on the v5 layered AI agent architecture.
 
-### `__init__(self, bot, cog, system_prompt_manager)`
+- **Attributes**:
+  - `bot` (`Any`): Instance attribute.
+  - `cog` (`Any`): Instance attribute.
+  - `logger` (`Any`): Instance attribute.
+  - `system_prompt_manager` (`Any`): Instance attribute.
+  - `_initialized` (`Any`): Instance attribute.
+  - `db_instances` (`Dict[int, StoryDB]`): Instance attribute.
+  - `character_db` (`Any`): Instance attribute.
+  - `prompt_engine` (`Any`): Instance attribute.
+  - `state_manager` (`Any`): Instance attribute.
+  - `language_manager` (`LanguageManager`): Instance attribute.
+  - `interventions` (`Dict[int, str]`): Instance attribute.
 
-Initializes the manager and its dependencies.
-
-*   **Dependencies:**
-    *   `StoryDB` & `CharacterDB`: For all database interactions.
-    *   `StoryPromptEngine`: To build prompts for the AI agents.
-    *   `StoryStateManager`: To apply state updates from the AI's plan.
-    *   `MemoryManager`: To potentially inject long-term memories into the context.
-    *   `LanguageManager`: For localization.
-
-### `async process_story_message(self, message: discord.Message)`
-
-This is the main entry point for the story generation pipeline, called every time a user sends a message in a story channel.
-
-*   **Process (Layered AI Agent Pipeline):**
-    1.  **GM Agent Call:** It first calls the `StoryPromptEngine` to build a comprehensive prompt for the "Director" (GM) agent. This prompt includes the world state, character details, recent events, and the user's latest message.
-    2.  **Plan Generation:** It sends this prompt to the LLM, instructing it to return a structured `GMActionPlan` JSON object. This plan dictates the next story beat.
-    3.  **Plan Execution:** The manager parses the `GMActionPlan`.
-        *   If the plan's `action_type` is `NARRATE`, it sends the narration content directly to the channel.
-        *   If the `action_type` is `DIALOGUE`, it proceeds to the next layer.
-    4.  **Actor Agent Calls:** For a `DIALOGUE` action, the manager iterates through the `dialogue_context` list provided in the GM's plan. For each character scheduled to speak:
-        *   It calls the `StoryPromptEngine` again to build a specific prompt for that "Actor" (Character) agent. This prompt includes the character's personality and the Director's specific instructions (motivation, emotional state).
-        *   It sends this prompt to the LLM, instructing it to return a `CharacterAction` JSON object containing the character's speech, actions, and thoughts.
-        *   The character's response is sent to the channel. The state (location, time) from this action becomes the authoritative state for the *next* actor in the sequence.
-    5.  **State Update:** After the plan is fully executed, it uses the final authoritative state (from the last actor's action) to update the `StoryInstance` via the `StoryStateManager`. It also updates any player-NPC relationships defined in the GM's plan.
-    6.  **Event Recording:** The entire sequence of events is recorded as a single `Event` in the world's history.
-    7.  **Summary & Outline Generation:** It maintains a message counter. After a certain number of messages (e.g., 20), it automatically triggers `_generate_and_save_summary` to create a summary of recent events. After a certain number of summaries (e.g., 10), it triggers `_generate_and_save_outline` to create a higher-level plot outline. These are then fed back into the GM's context in future turns.
-
-### Other Key Methods
-
-*   **`start_story(...)`:** Initializes a new `StoryInstance` in the database and calls `generate_first_scene` to kick off the narrative.
-*   **`generate_first_scene(...)`:** A special method that calls the GM agent with a prompt specifically designed to generate the opening narration for the story.
-*   **`add_intervention(...)`:** Stores an out-of-character instruction from a user, which will be injected with high priority into the next GM prompt.
+- **Methods**:
+  - `__init__(self, bot: commands.Bot, cog: commands.Cog, system_prompt_manager: SystemPromptManager) -> Any`: Method __init__.
+  - `_get_db(self, guild_id: int) -> StoryDB`: Gets or creates a database connection for a specific guild.
+  - `_extract_structured_response(self, response: Any, expected_model: Type[T], context: str) -> Optional[T]`: Unified extractor for structured agent responses.
+  - `initialize(self) -> Any`: Initializes the StoryManager and its components.
+  - `add_intervention(self, channel_id: int, text: str) -> Any`: Stores an intervention for a specific channel.
+  - `intervene(self, interaction: discord.Interaction) -> Any`: Opens a modal for the user to provide an OOC intervention.
+  - `_update_relationships(self, db: StoryDB, story_id: int, updates: List[RelationshipUpdate]) -> Any`: Updates player-NPC relationships based on the GM plan.
+  - `_record_event(self, db: StoryDB, world: StoryWorld, instance: StoryInstance, gm_plan: GMActionPlan, final_content: str) -> Any`: Creates and records an event in the world state.
+  - `_send_story_response(self, channel: discord.TextChannel, character: Optional[StoryCharacter], story_instance: StoryInstance, content: str | CharacterAction) -> Any`: Constructs and sends the story response as an embed, using a webhook if available.
+  - `process_story_message(self, message: discord.Message) -> Any`: Processes a message from a story channel using the v5 layered agent architecture.
+  - `_find_speaking_character(self, speaker_name: Optional[str], characters: List[StoryCharacter], channel: discord.abc.Messageable) -> Optional[StoryCharacter]`: Unified character lookup logic, supports multiple matching methods.
+  - `_generate_and_save_summary(self, story_instance: StoryInstance) -> Any`: Generates a summary of the last 20-40 messages and saves it.
+  - `_generate_and_save_outline(self, story_instance: StoryInstance) -> Any`: Generates a high-level outline from the last 10 summaries and saves it.
+  - `start_story(self, interaction: discord.Interaction, world_name: str, character_ids: List[str], use_narrator: bool, initial_date: Optional[str], initial_time: Optional[str], initial_location: str) -> Any`: Handles the logic of starting a new story, creating the instance,
+  - `generate_first_scene(self, interaction: discord.Interaction, story_instance: StoryInstance) -> Any`: Generates the introductory scene for a new story using the v5 architecture.
